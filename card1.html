@@ -7,7 +7,7 @@
 <title>Toque Saude — Menstrual Health</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
-:root { --wa-teal: #25D366; --wa-theme: #8E24AA; /* 紫色主题 */ --wa-bg: #ECE5DD; --wa-time: #999; }
+:root { --wa-teal: #25D366; --wa-theme: #8E24AA; --wa-bg: #ECE5DD; --wa-time: #999; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f0f0; display: flex; justify-content: center; min-height: 100vh; }
 .chat-screen { width: 100%; max-width: 420px; min-height: 100vh; display: flex; flex-direction: column; background: var(--wa-bg); }
 .chat-header { padding: 10px 16px; display: flex; align-items: center; gap: 12px; background: linear-gradient(135deg, #AB47BC, #8E24AA); position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
@@ -24,7 +24,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .bubble.out { background: #DCF8C6; border-top-right-radius: 0; }
 .bubble .time { font-size: 11px; color: var(--wa-time); text-align: right; margin-top: 2px; }
 
-/* Real Audio Player Styles - 与 Card 3/4/5 完全一致的验证版本 */
+/* Real Audio Player Styles */
 .bubble.audio-bubble { display: flex; align-items: center; gap: 10px; min-width: 200px; cursor: pointer; transition: background 0.2s; }
 .bubble.audio-bubble:active { background: #f0f0f0; }
 .audio-play-btn { width: 38px; height: 38px; border-radius: 50%; background: var(--wa-theme); border: none; color: white; font-size: 16px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
@@ -90,7 +90,7 @@ function addMsg(html, delay) {
   }, delay)); 
 }
 
-// 核心修复：引入成熟的真实音频播放模块，寻找 menstrual_intro.mp3
+// 核心修复：将调用的文件名精准改为 .wav
 function addRealAudioBubble(audioFileName, delay) {
   return new Promise(r => setTimeout(() => {
     audioCount++;
@@ -136,15 +136,12 @@ window.resetPlayer = function(audioId) {
 
 window.onload = () => {
   addMsg(`<div class="system-bubble">🔔 NFC Activated · GET_MENSTRUAL_FLOW<br><span style="color:var(--wa-theme)">Audio Path Connected</span></div>`, 800);
-  
   addMsg(`Hello! 👋 I am the <strong>Toque Saude</strong> health assistant. <br>I will guide you with information about <strong>menstrual health</strong>.<div class="time">${t()} ✓✓</div>`, 2000);
   
-  // 注入录音气泡，对应文件名 menstrual_intro.mp3
-  addRealAudioBubble('menstrual_intro.mp3', 2500);
+  // 这里已经改成了 .wav
+  addRealAudioBubble('menstrual_intro.wav', 2500);
 
-  // 基础知识卡片
   addMsg(`<div class="info-card"><div class="ic-header">🩸 Basic Menstrual Cycle Info</div><div class="ic-body"><ul><li>🔴 <strong>Normal cycle:</strong> 21-35 days</li><li>⏱️ <strong>Duration:</strong> 3-7 days is normal</li><li>🩺 <strong>Alert:</strong> extremely heavy bleeding — seek medical care</li><li>💧 <strong>Change:</strong> pad/tampon every 4-6 hours</li></ul></div></div><div class="time">${t()} ✓✓</div>`, 4000);
-  
   addMsg(`You felt <strong>1 circular notch</strong> in the top right corner 🟣 — this is the tactile mark for the menstrual card.<br><br>Tap the buttons below to continue.<div class="time">${t()} ✓✓</div>`, 5500).then(() => {
     typing.style.display='none'; qr.style.display='flex'; body.scrollTop=body.scrollHeight;
   });
@@ -154,18 +151,13 @@ function calcCycle() {
   qr.style.display='none';
   const o=document.createElement('div');o.className='bubble-wrap out';o.innerHTML=`<div class="bubble out">📅 Calculate next cycle<div class="time">${t()}</div></div>`;body.appendChild(o);
   typing.style.display='flex'; body.scrollTop=body.scrollHeight;
-  addMsg(`Please reply with the first day of your last period (e.g., May 1st).<div class="time">${t()} ✓✓</div>`, 1500).then(()=>{ 
-      typing.style.display='none'; 
-  });
+  addMsg(`Please reply with the first day of your last period (e.g., May 1st).<div class="time">${t()} ✓✓</div>`, 1500).then(()=>{ typing.style.display='none'; });
 }
-
 function callCHW() {
   qr.style.display='none';
   const o=document.createElement('div');o.className='bubble-wrap out';o.innerHTML=`<div class="bubble out">👩‍⚕️ Call CHW<div class="time">${t()}</div></div>`;body.appendChild(o);
   typing.style.display='flex'; body.scrollTop=body.scrollHeight;
-  addMsg(`✅ Connecting with the CHW (Community Health Worker)...<br>Your health agent will contact you shortly.<div class="time">${t()} ✓✓</div>`, 1500).then(()=>{ 
-      typing.style.display='none'; 
-  });
+  addMsg(`✅ Connecting with the CHW (Community Health Worker)...<br>Your health agent will contact you shortly.<div class="time">${t()} ✓✓</div>`, 1500).then(()=>{ typing.style.display='none'; });
 }
 </script>
 </body>
