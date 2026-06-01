@@ -1,0 +1,115 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Toque Saude — Autoexame da Mama</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root { --wa-teal: #25D366; --wa-bubble-in: #FFFFFF; --wa-bg: #ECE5DD; --wa-time: #999; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f0f0; display: flex; justify-content: center; min-height: 100vh; }
+.chat-screen { width: 100%; max-width: 420px; min-height: 100vh; display: flex; flex-direction: column; background: var(--wa-bg); }
+.chat-header { padding: 10px 16px; display: flex; align-items: center; gap: 12px; background: linear-gradient(135deg, #AD1457, #E91E8C); position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+.header-avatar { width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.25); display: flex; align-items: center; justify-content: center; font-size: 22px; }
+.header-info h2 { font-size: 16px; font-weight: 700; color: white; }
+.header-info p { font-size: 12px; color: rgba(255,255,255,0.85); }
+.chat-body { flex: 1; overflow-y: auto; padding: 16px 12px 20px; }
+.bubble-wrap { display: flex; margin-bottom: 4px; }
+.bubble-wrap.in { justify-content: flex-start; }
+.bubble-wrap.out { justify-content: flex-end; }
+.bubble { max-width: 78%; padding: 8px 12px 6px; border-radius: 8px; font-size: 14px; line-height: 1.5; box-shadow: 0 1px 2px rgba(0,0,0,0.15); animation: popIn 0.25s ease; }
+@keyframes popIn { from { opacity:0; transform:scale(0.92) translateY(6px); } to { opacity:1; transform:scale(1) translateY(0); } }
+.bubble.in { background: white; border-top-left-radius: 0; }
+.bubble.out { background: #DCF8C6; border-top-right-radius: 0; }
+.bubble .time { font-size: 11px; color: var(--wa-time); text-align: right; margin-top: 2px; }
+.bubble.audio-bubble { display: flex; align-items: center; gap: 10px; min-width: 200px; }
+.audio-play-btn { width: 38px; height: 38px; border-radius: 50%; background: var(--wa-teal); border: none; color: white; font-size: 16px; cursor: pointer; flex-shrink: 0; }
+.audio-wave { flex: 1; height: 24px; display: flex; align-items: center; gap: 2px; }
+.audio-wave span { display: block; width: 3px; background: #aaa; border-radius: 2px; animation: wave 1.2s ease-in-out infinite; }
+.audio-wave span:nth-child(1){height:8px;}.audio-wave span:nth-child(2){height:16px;animation-delay:.1s;}.audio-wave span:nth-child(3){height:22px;animation-delay:.2s;}.audio-wave span:nth-child(4){height:12px;animation-delay:.3s;}.audio-wave span:nth-child(5){height:18px;animation-delay:.4s;}.audio-wave span:nth-child(6){height:10px;animation-delay:.5s;}.audio-wave span:nth-child(7){height:20px;animation-delay:.6s;}.audio-wave span:nth-child(8){height:14px;animation-delay:.7s;}
+@keyframes wave { 0%,100%{opacity:.4;transform:scaleY(.7);}50%{opacity:1;transform:scaleY(1);} }
+.audio-dur { font-size: 12px; color: var(--wa-time); }
+.info-card { border-radius: 8px; overflow: hidden; border: 1px solid #e0e0e0; }
+.info-card .ic-header { padding: 10px 12px; font-weight: 700; font-size: 13px; color: white; }
+.info-card .ic-body { padding: 10px 12px; font-size: 13px; line-height: 1.6; color: #333; background: white; }
+.typing-wrap { display: flex; margin-bottom: 8px; }
+.typing-indicator { background: white; border-radius: 8px; border-top-left-radius: 0; padding: 12px 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.15); display: flex; gap: 4px; }
+.typing-dot { width: 8px; height: 8px; border-radius: 50%; background: #aaa; animation: tb 1.2s ease-in-out infinite; }
+.typing-dot:nth-child(2){animation-delay:.15s;}.typing-dot:nth-child(3){animation-delay:.3s;}
+@keyframes tb { 0%,60%,100%{transform:translateY(0);}30%{transform:translateY(-6px);} }
+.quick-reply-area { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 12px 4px; }
+.qr-btn { background: white; border: 1.5px solid #AD1457; color: #AD1457; border-radius: 20px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.qr-btn:hover { background: #AD1457; color: white; }
+.qr-btn.secondary { border-color: #888; color: #888; }
+.qr-btn.secondary:hover { background: #888; color: white; }
+.chat-input-bar { padding: 8px 12px; background: #f0f0f0; display: flex; align-items: center; gap: 10px; border-top: 1px solid #ddd; }
+.chat-input { flex:1; background: white; border: none; border-radius: 24px; padding: 10px 16px; font-size: 14px; outline: none; }
+.send-btn { width: 44px; height: 44px; border-radius: 50%; background: var(--wa-teal); border: none; color: white; font-size: 20px; cursor: pointer; }
+.date-divider { text-align: center; margin: 12px 0 8px; }
+.date-divider span { background: rgba(225,200,160,0.7); color: #666; font-size: 11.5px; padding: 4px 12px; border-radius: 12px; }
+.system-bubble { background: rgba(255,255,255,0.85); text-align: center; font-size: 12px; color: #666; border-radius: 8px; padding: 6px 12px; max-width: 85%; margin: 0 auto 8px; }
+</style>
+</head>
+<body>
+<div class="chat-screen">
+  <div class="chat-header">
+    <div class="header-avatar">🌿</div>
+    <div class="header-info"><h2>Toque Saude — Assistente</h2><p>🩷 Autoexame da Mama · Guia Passo a Passo</p></div>
+  </div>
+  <div class="chat-body" id="chatBody">
+    <div class="date-divider"><span>Hoje</span></div>
+    <div class="bubble-wrap out"><div class="bubble out">GET_BSE_FLOW<div class="time">✓✓ agora</div></div></div>
+    <div id="typing" class="typing-wrap"><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>
+  </div>
+  <div class="quick-reply-area" id="qrArea" style="display:none">
+    <button class="qr-btn" onclick="nextStep()">✅ Concluído, próximo passo</button>
+    <button class="qr-btn secondary" onclick="restart()">🔊 Repetir áudio</button>
+  </div>
+  <div class="chat-input-bar"><input class="chat-input" placeholder="Sistema responde automaticamente..." readonly><button class="send-btn">🎤</button></div>
+</div>
+<script>
+const steps = [
+  { icon:'🪞', title:'Passo 1: Observar a forma', text:'Fique em frente ao espelho com os braços ao longo do corpo. Observe a <strong>forma, tamanho e cor da pele</strong> de ambas as mamas. Verifique se há alterações.' },
+  { icon:'🙌', title:'Passo 2: Elevar os braços', text:'Levante os dois braços acima da cabeça. Observe novamente se há mudanças na forma das mamas e se há desconforto na axila.' },
+  { icon:'🖐️', title:'Passo 3: Palpação em espiral', text:'Use a mão direita para examinar a mama esquerda: com três dedos juntos, pressione suavemente em <strong>espiral</strong> do mamilo para fora. O relevo no cartão mostra exatamente esse caminho!' },
+  { icon:'🔄', title:'Passo 4: Trocar de mão', text:'Use a mão esquerda para examinar a mama direita, repetindo o mesmo movimento em espiral.' },
+  { icon:'🛁', title:'Passo 5: Deitar para examinar', text:'Deite-se com um travesseiro fino sob o ombro do lado examinado. Pressione novamente com as pontas dos dedos. No banho, a pele úmida facilita o exame!' },
+];
+let currentStep = 0;
+const body = document.getElementById('chatBody');
+const typing = document.getElementById('typing');
+const qr = document.getElementById('qrArea');
+const t = () => { const n=new Date(); return `${n.getHours()}:${String(n.getMinutes()).padStart(2,'0')}`; };
+function addMsg(html, delay) { return new Promise(r => setTimeout(() => { const d=document.createElement('div');d.className='bubble-wrap in';d.innerHTML=`<div class="bubble in">${html}</div>`;body.insertBefore(d,typing);body.scrollTop=body.scrollHeight;r(); }, delay)); }
+function addAudio(delay) { setTimeout(()=>{const d=document.createElement('div');d.className='bubble-wrap in';d.innerHTML=`<div class="bubble in audio-bubble"><button class="audio-play-btn">▶</button><div class="audio-wave"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div><span class="audio-dur">0:38</span></div>`;body.insertBefore(d,typing);body.scrollTop=body.scrollHeight;},delay); }
+function showStep(s) {
+  const step = steps[s];
+  addAudio(300);
+  addMsg(`<div class="info-card"><div class="ic-header" style="background:#AD1457">🩷 ${step.icon} ${step.title} (${s+1}/5)</div><div class="ic-body">${step.text}<br><br><em style="color:#888">👆 Conclua e clique em "próximo passo"</em></div></div><div class="time">${t()} ✓✓</div>`, 1500);
+  setTimeout(()=>{qr.style.display='flex';},2200);
+}
+window.onload = () => {
+  addMsg(`<div class="system-bubble">🔔 NFC ativado · GET_BSE_FLOW · <span style="color:#25D366">Guia de autoexame conectado</span></div>`, 800);
+  addMsg(`Olá 👋 Sou a assistente <strong>Toque Saude</strong>.<br>O cartão rosa tem <strong>2 encaixes circulares</strong> 🩷 — este é seu cartão de autoexame da mama.<br><br>Vou guiá-la passo a passo. Cada etapa dura cerca de <strong>5 minutos</strong> no total.<div class="time">${t()} ✓✓</div>`, 2000);
+  setTimeout(()=>{ typing.style.display='none'; showStep(0); }, 2800);
+};
+function nextStep() {
+  qr.style.display='none';
+  currentStep++;
+  if(currentStep < steps.length) {
+    const o=document.createElement('div');o.className='bubble-wrap out';o.innerHTML=`<div class="bubble out">✅ Concluído, próximo passo<div class="time">${t()}</div></div>`;body.appendChild(o);
+    showStep(currentStep);
+  } else {
+    const o=document.createElement('div');o.className='bubble-wrap out';o.innerHTML=`<div class="bubble out">✅ Concluído, próximo passo<div class="time">${t()}</div></div>`;body.appendChild(o);
+    addMsg(`🎉 <strong>Parabéns! Você completou os 5 passos do autoexame!</strong><br><br>Repita todo mês, entre o <strong>7º e 10º dia</strong> após a menstruação.<br><br>⚠️ Se sentir qualquer <strong>nódulo ou alteração</strong>, procure atendimento médico. Não entre em pânico!<div class="time">${t()} ✓✓</div>`, 800);
+    qr.innerHTML=`<button class="qr-btn" onclick="restart()">🔄 Recomeçar autoexame</button><button class="qr-btn secondary" onclick="callACS()">👩‍⚕️ Tenho dúvidas — chamar ACS</button>`;
+    setTimeout(()=>{qr.style.display='flex';},1600);
+  }
+  body.scrollTop=99999;
+}
+function restart() { currentStep=0; qr.style.display='none'; showStep(0); }
+function callACS() { qr.style.display='none'; addMsg(`✅ Conectando com a ACS do seu bairro...<br>Ela responderá durante a próxima visita domiciliar.<div class="time">${t()} ✓✓</div>`,200); }
+</script>
+</body>
+</html>

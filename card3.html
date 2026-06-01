@@ -1,0 +1,89 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Toque Saude — Saúde na Gravidez</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root { --wa-teal: #25D366; --wa-bg: #ECE5DD; --wa-time: #999; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f0f0; display: flex; justify-content: center; min-height: 100vh; }
+.chat-screen { width: 100%; max-width: 420px; min-height: 100vh; display: flex; flex-direction: column; background: var(--wa-bg); }
+.chat-header { padding: 10px 16px; display: flex; align-items: center; gap: 12px; background: linear-gradient(135deg, #1B5E20, #388E3C); position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
+.header-avatar { width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.25); display: flex; align-items: center; justify-content: center; font-size: 22px; }
+.header-info h2 { font-size: 16px; font-weight: 700; color: white; }
+.header-info p { font-size: 12px; color: rgba(255,255,255,0.85); }
+.chat-body { flex: 1; overflow-y: auto; padding: 16px 12px 20px; }
+.bubble-wrap { display: flex; margin-bottom: 4px; }
+.bubble-wrap.in { justify-content: flex-start; }
+.bubble-wrap.out { justify-content: flex-end; }
+.bubble { max-width: 78%; padding: 8px 12px 6px; border-radius: 8px; font-size: 14px; line-height: 1.5; box-shadow: 0 1px 2px rgba(0,0,0,0.15); animation: popIn 0.25s ease; }
+@keyframes popIn { from{opacity:0;transform:scale(0.92) translateY(6px);}to{opacity:1;transform:scale(1) translateY(0);} }
+.bubble.in { background: white; border-top-left-radius: 0; }
+.bubble.out { background: #DCF8C6; border-top-right-radius: 0; }
+.bubble .time { font-size: 11px; color: var(--wa-time); text-align: right; margin-top: 2px; }
+.info-card { border-radius: 8px; overflow: hidden; border: 1px solid #e0e0e0; }
+.info-card .ic-header { padding: 10px 12px; font-weight: 700; font-size: 14px; color: white; }
+.info-card .ic-body { padding: 10px 12px; font-size: 14px; line-height: 2; color: #333; background: white; }
+.typing-wrap { display: flex; margin-bottom: 8px; }
+.typing-indicator { background: white; border-radius: 8px; border-top-left-radius: 0; padding: 12px 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.15); display: flex; gap: 4px; }
+.typing-dot { width: 8px; height: 8px; border-radius: 50%; background: #aaa; animation: tb 1.2s ease-in-out infinite; }
+.typing-dot:nth-child(2){animation-delay:.15s;}.typing-dot:nth-child(3){animation-delay:.3s;}
+@keyframes tb { 0%,60%,100%{transform:translateY(0);}30%{transform:translateY(-6px);} }
+.quick-reply-area { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 12px 4px; }
+.qr-btn { background: white; border: 1.5px solid #2E7D32; color: #2E7D32; border-radius: 20px; padding: 8px 16px; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
+.qr-btn:hover { background: #2E7D32; color: white; }
+.qr-btn.secondary { border-color: #888; color: #888; }
+.qr-btn.secondary:hover { background: #888; color: white; }
+.chat-input-bar { padding: 8px 12px; background: #f0f0f0; display: flex; align-items: center; gap: 10px; border-top: 1px solid #ddd; }
+.chat-input { flex:1; background: white; border: none; border-radius: 24px; padding: 10px 16px; font-size: 14px; outline: none; }
+.send-btn { width: 44px; height: 44px; border-radius: 50%; background: var(--wa-teal); border: none; color: white; font-size: 20px; cursor: pointer; }
+.date-divider { text-align: center; margin: 12px 0 8px; }
+.date-divider span { background: rgba(225,200,160,0.7); color: #666; font-size: 11.5px; padding: 4px 12px; border-radius: 12px; }
+.video-mock { background: linear-gradient(135deg,#1B5E20,#388E3C); padding: 28px; text-align: center; border-radius: 6px; }
+.system-bubble { background: rgba(255,255,255,0.85); text-align: center; font-size: 12px; color: #666; border-radius: 8px; padding: 6px 12px; max-width: 85%; margin: 0 auto 8px; }
+</style>
+</head>
+<body>
+<div class="chat-screen">
+  <div class="chat-header">
+    <div class="header-avatar">🌿</div>
+    <div class="header-info"><h2>Toque Saude — Assistente</h2><p>🤰 Saúde na Gravidez · Versão Libras + Texto</p></div>
+  </div>
+  <div class="chat-body" id="chatBody">
+    <div class="date-divider"><span>Hoje</span></div>
+    <div class="bubble-wrap out"><div class="bubble out">GET_PREGNANCY_FLOW<div class="time">✓✓ agora</div></div></div>
+    <div id="typing" class="typing-wrap"><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>
+  </div>
+  <div class="quick-reply-area" id="qrArea" style="display:none">
+    <button class="qr-btn" onclick="goClinic()">🏥 Ir à UBS mais próxima</button>
+    <button class="qr-btn" onclick="showChecklist()">📋 Ver lista completa de exames</button>
+    <button class="qr-btn secondary" onclick="callACS()">👩‍⚕️ Chamar ACS</button>
+  </div>
+  <div class="chat-input-bar"><input class="chat-input" placeholder="Sistema responde automaticamente..." readonly><button class="send-btn">🎤</button></div>
+</div>
+<script>
+const body=document.getElementById('chatBody'),typing=document.getElementById('typing'),qr=document.getElementById('qrArea');
+const t=()=>{const n=new Date();return`${n.getHours()}:${String(n.getMinutes()).padStart(2,'0')}`;};
+function addMsg(html,delay){return new Promise(r=>setTimeout(()=>{const d=document.createElement('div');d.className='bubble-wrap in';d.innerHTML=`<div class="bubble in">${html}</div>`;body.insertBefore(d,typing);body.scrollTop=body.scrollHeight;r();},delay));}
+function addOut(html){const d=document.createElement('div');d.className='bubble-wrap out';d.innerHTML=`<div class="bubble out">${html}<div class="time">${t()}</div></div>`;body.appendChild(d);body.scrollTop=body.scrollHeight;}
+window.onload=()=>{
+  addMsg(`<div class="system-bubble">🔔 NFC ativado · GET_PREGNANCY_FLOW · <span style="color:#25D366">Rota Libras + texto ativada</span></div>`,800);
+  addMsg(`<span style="font-size:22px">🤰</span> <strong>Assistente de Saúde na Gravidez — Toque Saude</strong><br><br>O cartão verde tem <strong>3 encaixes circulares</strong> 🟢<br>Conteúdo disponível em <strong>texto ampliado</strong> e <strong>vídeo em Libras</strong>.<div class="time">${t()} ✓✓</div>`,2000);
+  setTimeout(()=>{typing.style.display='none';},2800);
+  setTimeout(()=>{
+    const d=document.createElement('div');d.className='bubble-wrap in';
+    d.innerHTML=`<div class="bubble in" style="padding:4px;"><div class="video-mock"><div style="font-size:48px">🤟</div><div style="color:white;font-size:13px;margin-top:8px;font-weight:700">Vídeo em Libras</div><div style="color:rgba(255,255,255,0.8);font-size:11px;margin-top:4px">Pré-natal completo em Libras · 3:24</div><div style="background:rgba(0,0,0,0.3);color:white;border-radius:20px;padding:6px 16px;margin-top:12px;display:inline-block;font-size:12px">▶ Toque para assistir</div></div><div style="padding:6px 8px 4px;font-size:13px;color:#555">🤟 Vídeo completo do pré-natal em Libras com legendas</div><div style="padding:0 8px 4px;font-size:11px;color:${`#999`};text-align:right">${t()} ✓✓</div></div>`;
+    body.insertBefore(d,typing);body.scrollTop=body.scrollHeight;
+  },3500);
+  addMsg(`<div class="info-card"><div class="ic-header" style="background:#2E7D32;font-size:15px;">📅 Consultas do Pré-Natal no SUS</div><div class="ic-body">✅ <strong>6–8 semanas</strong>: Confirmar gravidez + cadastro<br>✅ <strong>11–14 semanas</strong>: Ultrassom NT<br>✅ <strong>16–20 semanas</strong>: Ultrassom morfológico<br>✅ <strong>24–28 semanas</strong>: Teste de diabetes (GDM)<br>✅ <strong>A partir de 36 semanas</strong>: Consulta semanal</div></div><div class="time">${t()} ✓✓</div>`,5500);
+  addMsg(`📍 UBS acessível mais próxima:<br><strong>UBS Saúde da Mulher</strong><br>Rua das Flores, 123<br>Seg–Sex: <strong>7:00–19:00</strong><br>✅ Rampa ✅ Intérprete de Libras ✅ Sem agendamento<div class="time">${t()} ✓✓</div>`,7500);
+  setTimeout(()=>{qr.style.display='flex';},8200);
+};
+function goClinic(){qr.style.display='none';addOut('🏥 Ir à UBS mais próxima');addMsg(`📍 <strong>UBS Saúde da Mulher</strong><br>🚶 ~12 minutos a pé<br>🚌 Ônibus linha 3, 2 paradas<br><br>🔊 <em>Roteiro de áudio enviado para seu celular</em><div class="time">${t()} ✓✓</div>`,1200);}
+function showChecklist(){qr.style.display='none';addOut('📋 Ver lista completa de exames');addMsg(`<div class="info-card"><div class="ic-header" style="background:#2E7D32">📋 Exames Gratuitos pelo SUS</div><div class="ic-body" style="font-size:13px;"><ul style="padding-left:18px;line-height:2;"><li>Hemograma completo + tipagem sanguínea</li><li>Exame de urina</li><li>HIV / Sífilis / Hepatite B</li><li>Toxoplasmose / Rubéola</li><li>3 ultrassons durante a gravidez</li><li>Pressão arterial (em toda consulta)</li></ul><br><em>Todos <strong>gratuitos</strong> pelo SUS!</em></div></div><div class="time">${t()} ✓✓</div>`,1200);}
+function callACS(){qr.style.display='none';addOut('👩‍⚕️ Chamar ACS');addMsg(`✅ Conectando com a ACS do seu bairro...<br>Ela irá esclarecer suas dúvidas sobre o pré-natal na próxima visita.<div class="time">${t()} ✓✓</div>`,1200);}
+</script>
+</body>
+</html>
