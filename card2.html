@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Toque Saude — Autoexame da Mama</title>
+<title>Toque Saude — Breast Self-Exam</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 :root { --wa-teal: #25D366; --wa-bubble-in: #FFFFFF; --wa-bg: #ECE5DD; --wa-time: #999; }
@@ -23,13 +23,18 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .bubble.in { background: white; border-top-left-radius: 0; }
 .bubble.out { background: #DCF8C6; border-top-right-radius: 0; }
 .bubble .time { font-size: 11px; color: var(--wa-time); text-align: right; margin-top: 2px; }
-.bubble.audio-bubble { display: flex; align-items: center; gap: 10px; min-width: 200px; }
-.audio-play-btn { width: 38px; height: 38px; border-radius: 50%; background: var(--wa-teal); border: none; color: white; font-size: 16px; cursor: pointer; flex-shrink: 0; }
+
+/* Real Audio Player Styles */
+.bubble.audio-bubble { display: flex; align-items: center; gap: 10px; min-width: 200px; cursor: pointer; transition: background 0.2s; }
+.bubble.audio-bubble:active { background: #f0f0f0; }
+.audio-play-btn { width: 38px; height: 38px; border-radius: 50%; background: var(--wa-teal); border: none; color: white; font-size: 16px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
 .audio-wave { flex: 1; height: 24px; display: flex; align-items: center; gap: 2px; }
-.audio-wave span { display: block; width: 3px; background: #aaa; border-radius: 2px; animation: wave 1.2s ease-in-out infinite; }
+.audio-wave span { display: block; width: 3px; background: #aaa; border-radius: 2px; }
+.audio-wave.playing span { animation: wave 1.2s ease-in-out infinite; background: var(--wa-teal); }
 .audio-wave span:nth-child(1){height:8px;}.audio-wave span:nth-child(2){height:16px;animation-delay:.1s;}.audio-wave span:nth-child(3){height:22px;animation-delay:.2s;}.audio-wave span:nth-child(4){height:12px;animation-delay:.3s;}.audio-wave span:nth-child(5){height:18px;animation-delay:.4s;}.audio-wave span:nth-child(6){height:10px;animation-delay:.5s;}.audio-wave span:nth-child(7){height:20px;animation-delay:.6s;}.audio-wave span:nth-child(8){height:14px;animation-delay:.7s;}
 @keyframes wave { 0%,100%{opacity:.4;transform:scaleY(.7);}50%{opacity:1;transform:scaleY(1);} }
-.audio-dur { font-size: 12px; color: var(--wa-time); }
+.audio-dur { font-size: 12px; color: var(--wa-time); font-weight: bold; pointer-events: none; }
+
 .info-card { border-radius: 8px; overflow: hidden; border: 1px solid #e0e0e0; }
 .info-card .ic-header { padding: 10px 12px; font-weight: 700; font-size: 13px; color: white; }
 .info-card .ic-body { padding: 10px 12px; font-size: 13px; line-height: 1.6; color: #333; background: white; }
@@ -45,7 +50,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .qr-btn.secondary:hover { background: #888; color: white; }
 .chat-input-bar { padding: 8px 12px; background: #f0f0f0; display: flex; align-items: center; gap: 10px; border-top: 1px solid #ddd; }
 .chat-input { flex:1; background: white; border: none; border-radius: 24px; padding: 10px 16px; font-size: 14px; outline: none; }
-.send-btn { width: 44px; height: 44px; border-radius: 50%; background: var(--wa-teal); border: none; color: white; font-size: 20px; cursor: pointer; }
+.send-btn { width: 44px; height: 44px; border-radius: 50%; background: var(--wa-teal); border: none; color: white; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .date-divider { text-align: center; margin: 12px 0 8px; }
 .date-divider span { background: rgba(225,200,160,0.7); color: #666; font-size: 11.5px; padding: 4px 12px; border-radius: 12px; }
 .system-bubble { background: rgba(255,255,255,0.85); text-align: center; font-size: 12px; color: #666; border-radius: 8px; padding: 6px 12px; max-width: 85%; margin: 0 auto 8px; }
@@ -55,61 +60,149 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 <div class="chat-screen">
   <div class="chat-header">
     <div class="header-avatar">🌿</div>
-    <div class="header-info"><h2>Toque Saude — Assistente</h2><p>🩷 Autoexame da Mama · Guia Passo a Passo</p></div>
+    <div class="header-info"><h2>Toque Saude — Assistant</h2><p>🩷 Breast Self-Exam · Step Guide</p></div>
   </div>
   <div class="chat-body" id="chatBody">
-    <div class="date-divider"><span>Hoje</span></div>
-    <div class="bubble-wrap out"><div class="bubble out">GET_BSE_FLOW<div class="time">✓✓ agora</div></div></div>
+    <div class="date-divider"><span>Today</span></div>
+    <div class="bubble-wrap out"><div class="bubble out">GET_BSE_FLOW<div class="time">✓✓ just now</div></div></div>
     <div id="typing" class="typing-wrap"><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>
   </div>
   <div class="quick-reply-area" id="qrArea" style="display:none">
-    <button class="qr-btn" onclick="nextStep()">✅ Concluído, próximo passo</button>
-    <button class="qr-btn secondary" onclick="restart()">🔊 Repetir áudio</button>
+    <button class="qr-btn" onclick="nextStep()">✅ Done, next step</button>
   </div>
-  <div class="chat-input-bar"><input class="chat-input" placeholder="Sistema responde automaticamente..." readonly><button class="send-btn">🎤</button></div>
+  <div class="chat-input-bar"><input class="chat-input" placeholder="System replies automatically..." readonly><button class="send-btn">🎤</button></div>
 </div>
+
 <script>
+// Data structure for the 5 steps + mapping to corresponding audio files
 const steps = [
-  { icon:'🪞', title:'Passo 1: Observar a forma', text:'Fique em frente ao espelho com os braços ao longo do corpo. Observe a <strong>forma, tamanho e cor da pele</strong> de ambas as mamas. Verifique se há alterações.' },
-  { icon:'🙌', title:'Passo 2: Elevar os braços', text:'Levante os dois braços acima da cabeça. Observe novamente se há mudanças na forma das mamas e se há desconforto na axila.' },
-  { icon:'🖐️', title:'Passo 3: Palpação em espiral', text:'Use a mão direita para examinar a mama esquerda: com três dedos juntos, pressione suavemente em <strong>espiral</strong> do mamilo para fora. O relevo no cartão mostra exatamente esse caminho!' },
-  { icon:'🔄', title:'Passo 4: Trocar de mão', text:'Use a mão esquerda para examinar a mama direita, repetindo o mesmo movimento em espiral.' },
-  { icon:'🛁', title:'Passo 5: Deitar para examinar', text:'Deite-se com um travesseiro fino sob o ombro do lado examinado. Pressione novamente com as pontas dos dedos. No banho, a pele úmida facilita o exame!' },
+  { icon:'🪞', title:'Step 1: Observe the shape', text:'Stand in front of a mirror with your arms by your side. Observe the <strong>shape, size, and skin color</strong> of both breasts.', audio: 'bse_step1.mp3' },
+  { icon:'🙌', title:'Step 2: Raise your arms', text:'Raise both arms above your head. Observe again if there are any changes in shape or any discomfort in your armpits.', audio: 'bse_step2.mp3' },
+  { icon:'🖐️', title:'Step 3: Spiral palpation', text:'Use your right hand to examine your left breast. With three fingers together, press gently in a <strong>spiral motion</strong> from the nipple outward.', audio: 'bse_step3.mp3' },
+  { icon:'🔄', title:'Step 4: Switch hands', text:'Use your left hand to examine your right breast, repeating the same spiral motion.', audio: 'bse_step4.mp3' },
+  { icon:'🛁', title:'Step 5: Lie down', text:'Lie down with a thin pillow under your shoulder. Press again with your fingertips. Doing this in the shower helps!', audio: 'bse_step5.mp3' },
 ];
 let currentStep = 0;
+let audioCount = 0;
+
 const body = document.getElementById('chatBody');
 const typing = document.getElementById('typing');
 const qr = document.getElementById('qrArea');
 const t = () => { const n=new Date(); return `${n.getHours()}:${String(n.getMinutes()).padStart(2,'0')}`; };
-function addMsg(html, delay) { return new Promise(r => setTimeout(() => { const d=document.createElement('div');d.className='bubble-wrap in';d.innerHTML=`<div class="bubble in">${html}</div>`;body.insertBefore(d,typing);body.scrollTop=body.scrollHeight;r(); }, delay)); }
-function addAudio(delay) { setTimeout(()=>{const d=document.createElement('div');d.className='bubble-wrap in';d.innerHTML=`<div class="bubble in audio-bubble"><button class="audio-play-btn">▶</button><div class="audio-wave"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div><span class="audio-dur">0:38</span></div>`;body.insertBefore(d,typing);body.scrollTop=body.scrollHeight;},delay); }
+
+function addMsg(html, delay) { 
+  return new Promise(r => setTimeout(() => { 
+    const d=document.createElement('div');d.className='bubble-wrap in';
+    d.innerHTML=`<div class="bubble in">${html}</div>`;
+    body.insertBefore(d,typing);body.scrollTop=body.scrollHeight;
+    r(); 
+  }, delay)); 
+}
+
+// Function to generate playable real audio bubbles
+function addRealAudioBubble(audioFileName, delay) {
+  return new Promise(r => setTimeout(() => {
+    audioCount++;
+    const currentId = 'voiceMsg' + audioCount;
+    const d = document.createElement('div');
+    d.className = 'bubble-wrap in';
+    d.innerHTML = `
+      <div class="bubble in audio-bubble" onclick="togglePlay('${currentId}', this)">
+        <audio id="${currentId}" src="${audioFileName}" onended="resetPlayer('${currentId}')" preload="auto"></audio>
+        <button class="audio-play-btn">▶</button>
+        <div class="audio-wave" id="wave-${currentId}">
+          <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <span class="audio-dur">Play</span>
+      </div>
+    `;
+    body.insertBefore(d, typing);
+    body.scrollTop = body.scrollHeight;
+    r();
+  }, delay));
+}
+
+// Play/Pause Control Logic
+window.togglePlay = function(audioId, bubbleElement) {
+  const audioObj = document.getElementById(audioId);
+  const playBtn = bubbleElement.querySelector('.audio-play-btn');
+  const wave = document.getElementById('wave-' + audioId);
+  
+  if (audioObj.paused) {
+    // Pause other audios
+    document.querySelectorAll('audio').forEach(a => { if(a.id !== audioId) { a.pause(); resetPlayer(a.id); } });
+    audioObj.play();
+    playBtn.innerHTML = '⏸';
+    wave.classList.add('playing');
+  } else {
+    audioObj.pause();
+    playBtn.innerHTML = '▶';
+    wave.classList.remove('playing');
+  }
+};
+
+window.resetPlayer = function(audioId) {
+  const audioObj = document.getElementById(audioId);
+  if(audioObj) {
+      const bubble = audioObj.parentElement;
+      const playBtn = bubble.querySelector('.audio-play-btn');
+      const wave = document.getElementById('wave-' + audioId);
+      playBtn.innerHTML = '▶';
+      wave.classList.remove('playing');
+  }
+};
+
 function showStep(s) {
   const step = steps[s];
-  addAudio(300);
-  addMsg(`<div class="info-card"><div class="ic-header" style="background:#AD1457">🩷 ${step.icon} ${step.title} (${s+1}/5)</div><div class="ic-body">${step.text}<br><br><em style="color:#888">👆 Conclua e clique em "próximo passo"</em></div></div><div class="time">${t()} ✓✓</div>`, 1500);
+  // 1. Inject the audio for this specific step
+  addRealAudioBubble(step.audio, 300);
+  
+  // 2. Inject the text card for this specific step
+  addMsg(`<div class="info-card"><div class="ic-header" style="background:#AD1457">🩷 ${step.icon} ${step.title} (${s+1}/5)</div><div class="ic-body">${step.text}<br><br><em style="color:#888">👆 Follow the audio and tap "Done, next step"</em></div></div><div class="time">${t()} ✓✓</div>`, 1500);
+  
   setTimeout(()=>{qr.style.display='flex';},2200);
 }
+
 window.onload = () => {
-  addMsg(`<div class="system-bubble">🔔 NFC ativado · GET_BSE_FLOW · <span style="color:#25D366">Guia de autoexame conectado</span></div>`, 800);
-  addMsg(`Olá 👋 Sou a assistente <strong>Toque Saude</strong>.<br>O cartão rosa tem <strong>2 encaixes circulares</strong> 🩷 — este é seu cartão de autoexame da mama.<br><br>Vou guiá-la passo a passo. Cada etapa dura cerca de <strong>5 minutos</strong> no total.<div class="time">${t()} ✓✓</div>`, 2000);
-  setTimeout(()=>{ typing.style.display='none'; showStep(0); }, 2800);
+  addMsg(`<div class="system-bubble">🔔 NFC Activated · GET_BSE_FLOW · <span style="color:#25D366">Guide connected</span></div>`, 800);
+  addMsg(`Hello 👋 I am the <strong>Toque Saude</strong> assistant.<br>The pink card has <strong>2 circular notches</strong> 🩷 — this is your breast self-exam card.<br><br>I will guide you step by step.<div class="time">${t()} ✓✓</div>`, 2000);
+  
+  // Inject the Welcome audio
+  addRealAudioBubble('bse_intro.mp3', 2500);
+
+  setTimeout(()=>{ typing.style.display='none'; showStep(0); }, 3500);
 };
+
 function nextStep() {
   qr.style.display='none';
   currentStep++;
+  const o=document.createElement('div');o.className='bubble-wrap out';
+  o.innerHTML=`<div class="bubble out">✅ Done, next step<div class="time">${t()}</div></div>`;
+  body.appendChild(o);
+  
   if(currentStep < steps.length) {
-    const o=document.createElement('div');o.className='bubble-wrap out';o.innerHTML=`<div class="bubble out">✅ Concluído, próximo passo<div class="time">${t()}</div></div>`;body.appendChild(o);
-    showStep(currentStep);
+    typing.style.display='flex';
+    setTimeout(() => { typing.style.display='none'; showStep(currentStep); }, 1000);
   } else {
-    const o=document.createElement('div');o.className='bubble-wrap out';o.innerHTML=`<div class="bubble out">✅ Concluído, próximo passo<div class="time">${t()}</div></div>`;body.appendChild(o);
-    addMsg(`🎉 <strong>Parabéns! Você completou os 5 passos do autoexame!</strong><br><br>Repita todo mês, entre o <strong>7º e 10º dia</strong> após a menstruação.<br><br>⚠️ Se sentir qualquer <strong>nódulo ou alteração</strong>, procure atendimento médico. Não entre em pânico!<div class="time">${t()} ✓✓</div>`, 800);
-    qr.innerHTML=`<button class="qr-btn" onclick="restart()">🔄 Recomeçar autoexame</button><button class="qr-btn secondary" onclick="callACS()">👩‍⚕️ Tenho dúvidas — chamar ACS</button>`;
+    addMsg(`🎉 <strong>Congratulations! You completed the 5 steps!</strong><br><br>Repeat this every month, between the <strong>7th and 10th day</strong> after your period starts.<br><br>⚠️ If you feel any <strong>lump or change</strong>, seek medical care. Don't panic!<div class="time">${t()} ✓✓</div>`, 800);
+    qr.innerHTML=`<button class="qr-btn" onclick="restart()">🔄 Restart exam</button><button class="qr-btn secondary" onclick="callACS()">👩‍⚕️ Have questions — call CHW</button>`;
     setTimeout(()=>{qr.style.display='flex';},1600);
   }
-  body.scrollTop=99999;
+  body.scrollTop=body.scrollHeight;
 }
-function restart() { currentStep=0; qr.style.display='none'; showStep(0); }
-function callACS() { qr.style.display='none'; addMsg(`✅ Conectando com a ACS do seu bairro...<br>Ela responderá durante a próxima visita domiciliar.<div class="time">${t()} ✓✓</div>`,200); }
+
+function restart() { 
+  currentStep=0; 
+  qr.style.display='none'; 
+  const o=document.createElement('div');o.className='bubble-wrap out';o.innerHTML=`<div class="bubble out">🔄 Restart exam<div class="time">${t()}</div></div>`;body.appendChild(o);
+  typing.style.display='flex';
+  setTimeout(() => { typing.style.display='none'; showStep(0); }, 1000);
+}
+function callACS() { 
+  qr.style.display='none'; 
+  const o=document.createElement('div');o.className='bubble-wrap out';o.innerHTML=`<div class="bubble out">👩‍⚕️ Have questions — call CHW<div class="time">${t()}</div></div>`;body.appendChild(o);
+  addMsg(`✅ Connecting with the CHW for your neighborhood...<br>They will answer your questions during the next home visit.<div class="time">${t()} ✓✓</div>`,800); 
+}
 </script>
 </body>
 </html>
