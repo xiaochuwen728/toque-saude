@@ -1,10 +1,10 @@
 
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-<title>Toque Saude — Saúde Menstrual</title>
+<title>Toque Saude — Menstrual Health</title>
 <style>
 * { box-sizing: border-box; margin: 0; padding: 0; }
 :root { --wa-green: #075E54; --wa-teal: #25D366; --wa-bubble-in: #FFFFFF; --wa-bg: #ECE5DD; --wa-time: #999; }
@@ -23,13 +23,18 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 .bubble.in { background: var(--wa-bubble-in); border-top-left-radius: 0; }
 .bubble.out { background: #DCF8C6; border-top-right-radius: 0; }
 .bubble .time { font-size: 11px; color: var(--wa-time); text-align: right; margin-top: 2px; }
-.bubble.audio-bubble { display: flex; align-items: center; gap: 10px; min-width: 200px; }
-.audio-play-btn { width: 38px; height: 38px; border-radius: 50%; background: var(--wa-teal); border: none; color: white; font-size: 16px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+
+/* Audio Bubble UI styling */
+.bubble.audio-bubble { display: flex; align-items: center; gap: 10px; min-width: 200px; cursor: pointer; transition: background 0.2s; }
+.bubble.audio-bubble:active { background: #f0f0f0; }
+.audio-play-btn { width: 38px; height: 38px; border-radius: 50%; background: var(--wa-teal); border: none; color: white; font-size: 16px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
 .audio-wave { flex: 1; height: 24px; display: flex; align-items: center; gap: 2px; }
-.audio-wave span { display: block; width: 3px; background: #aaa; border-radius: 2px; animation: wave 1.2s ease-in-out infinite; }
+.audio-wave span { display: block; width: 3px; background: #aaa; border-radius: 2px; }
+.audio-wave.playing span { animation: wave 1.2s ease-in-out infinite; }
 .audio-wave span:nth-child(1){ height:8px; } .audio-wave span:nth-child(2){ height:16px; animation-delay:0.1s; } .audio-wave span:nth-child(3){ height:22px; animation-delay:0.2s; } .audio-wave span:nth-child(4){ height:12px; animation-delay:0.3s; } .audio-wave span:nth-child(5){ height:18px; animation-delay:0.4s; } .audio-wave span:nth-child(6){ height:10px; animation-delay:0.5s; } .audio-wave span:nth-child(7){ height:20px; animation-delay:0.6s; } .audio-wave span:nth-child(8){ height:14px; animation-delay:0.7s; }
 @keyframes wave { 0%,100%{ opacity:0.4; transform:scaleY(0.7); } 50%{ opacity:1; transform:scaleY(1); } }
-.audio-dur { font-size: 12px; color: var(--wa-time); }
+.audio-dur { font-size: 12px; color: var(--wa-time); font-weight: bold; pointer-events: none; }
+
 .info-card { border-radius: 8px; overflow: hidden; border: 1px solid #e0e0e0; }
 .info-card .ic-header { padding: 10px 12px; font-weight: 700; font-size: 13px; color: white; }
 .info-card .ic-body { padding: 10px 12px; font-size: 13px; line-height: 1.6; color: #333; background: white; }
@@ -57,25 +62,30 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; b
 <div class="chat-screen">
   <div class="chat-header">
     <div class="header-avatar">🌿</div>
-    <div class="header-info"><h2>Toque Saude — Assistente</h2><p>🟣 Saúde Menstrual · Guia por Áudio</p></div>
+    <div class="header-info"><h2>Toque Saude — Assistant</h2><p>🟣 Menstrual Health · Audio Guide</p></div>
   </div>
   <div class="chat-body" id="chatBody">
-    <div class="date-divider"><span>Hoje</span></div>
-    <div class="bubble-wrap out"><div class="bubble out">GET_MENSTRUAL_FLOW<div class="time">✓✓ agora</div></div></div>
+    <div class="date-divider"><span>Today</span></div>
+    <div class="bubble-wrap out"><div class="bubble out">GET_MENSTRUAL_FLOW<div class="time">✓✓ just now</div></div></div>
     <div id="typing" class="typing-wrap"><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>
   </div>
   <div class="quick-reply-area" id="qrArea" style="display:none">
-    <button class="qr-btn" onclick="step2()">🔊 Repetir áudio</button>
-    <button class="qr-btn" onclick="step3()">📅 Calcular próximo ciclo</button>
-    <button class="qr-btn secondary" onclick="step4()">👩‍⚕️ Chamar ACS</button>
+    <button class="qr-btn" onclick="step2()">🔊 Repeat audio</button>
+    <button class="qr-btn" onclick="step3()">📅 Calculate next cycle</button>
+    <button class="qr-btn secondary" onclick="step4()">👩‍⚕️ Call CHW</button>
   </div>
-  <div class="chat-input-bar"><input class="chat-input" placeholder="Sistema responde automaticamente..." readonly><button class="send-btn">🎤</button></div>
+  <div class="chat-input-bar"><input class="chat-input" placeholder="System replies automatically..." readonly><button class="send-btn">🎤</button></div>
 </div>
+
 <script>
 const body = document.getElementById('chatBody');
 const typing = document.getElementById('typing');
 const qr = document.getElementById('qrArea');
 const t = () => { const n=new Date(); return `${n.getHours()}:${String(n.getMinutes()).padStart(2,'0')}`; };
+
+// Global audio ID counter to handle multiple audio bubbles
+let audioCount = 0;
+
 function addMsg(html, delay) {
   return new Promise(r => setTimeout(() => {
     const d = document.createElement('div');
@@ -86,27 +96,102 @@ function addMsg(html, delay) {
     r();
   }, delay));
 }
-function audioBubble() {
-  return `<div class="bubble in audio-bubble"><button class="audio-play-btn">▶</button><div class="audio-wave"><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span></div><span class="audio-dur">0:45</span></div>`;
-}
-window.onload = () => {
-  addMsg(`<div class="system-bubble">🔔 NFC ativado · GET_MENSTRUAL_FLOW · <span style="color:#25D366">Rota de áudio conectada</span></div>`, 800);
-  addMsg(`Olá! Sou a assistente de saúde <strong>Toque Saude</strong> 👋<br>Vou guiá-la com informações sobre <strong>saúde menstrual</strong>.<div class="time">${t()} ✓✓</div>`, 1800);
-  setTimeout(() => { typing.style.display='none'; }, 2500);
-  setTimeout(() => {
+
+// Upgraded Audio Bubble Function with actual <audio> tag injection
+function addRealAudioBubble(audioFileName, delay) {
+  return new Promise(r => setTimeout(() => {
+    audioCount++;
+    const currentId = 'voiceMsg' + audioCount;
     const d = document.createElement('div');
     d.className = 'bubble-wrap in';
-    d.innerHTML = audioBubble();
+    
+    // HTML for the playable audio bubble
+    d.innerHTML = `
+      <div class="bubble in audio-bubble" onclick="togglePlay('${currentId}', this)">
+        <audio id="${currentId}" src="${audioFileName}" onended="resetPlayer('${currentId}')" preload="auto"></audio>
+        <button class="audio-play-btn">▶</button>
+        <div class="audio-wave" id="wave-${currentId}">
+          <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+        </div>
+        <span class="audio-dur">Play</span>
+      </div>
+    `;
+    
     body.insertBefore(d, typing);
     body.scrollTop = body.scrollHeight;
-  }, 2800);
-  addMsg(`<div class="info-card"><div class="ic-header" style="background:#7B1FA2">🩸 Informações Básicas do Ciclo Menstrual</div><div class="ic-body"><ul><li>🔴 Ciclo normal: <strong>21–35 dias</strong></li><li>📅 Duração: <strong>3–7 dias</strong> é normal</li><li>🩺 Alerta: sangramento muito intenso — procure atendimento</li><li>💧 Troca: a cada <strong>4–6 horas</strong></li></ul></div></div><div class="time">${t()} ✓✓</div>`, 4500);
-  addMsg(`Você sentiu <strong>1 encaixe circular</strong> no canto superior direito 🟣 — esta é a marcação tátil do cartão menstrual.<br><br>Toque nos botões abaixo para continuar.<div class="time">${t()} ✓✓</div>`, 6500);
+    r();
+  }, delay));
+}
+
+// Function to handle Play/Pause logic
+window.togglePlay = function(audioId, bubbleElement) {
+  const audioObj = document.getElementById(audioId);
+  const playBtn = bubbleElement.querySelector('.audio-play-btn');
+  const wave = document.getElementById('wave-' + audioId);
+  
+  if (audioObj.paused) {
+    // Pause any other playing audios first (optional but good practice)
+    document.querySelectorAll('audio').forEach(a => { 
+        if(a.id !== audioId) { a.pause(); resetPlayer(a.id); } 
+    });
+    
+    audioObj.play();
+    playBtn.innerHTML = '⏸';
+    wave.classList.add('playing');
+  } else {
+    audioObj.pause();
+    playBtn.innerHTML = '▶';
+    wave.classList.remove('playing');
+  }
+};
+
+// Function triggered when audio finishes playing naturally
+window.resetPlayer = function(audioId) {
+  const audioObj = document.getElementById(audioId);
+  if(audioObj) {
+      const bubble = audioObj.parentElement;
+      const playBtn = bubble.querySelector('.audio-play-btn');
+      const wave = document.getElementById('wave-' + audioId);
+      playBtn.innerHTML = '▶';
+      wave.classList.remove('playing');
+  }
+};
+
+window.onload = () => {
+  addMsg(`<div class="system-bubble">🔔 NFC Activated · GET_MENSTRUAL_FLOW · <span style="color:#25D366">Audio Path Connected</span></div>`, 800);
+  addMsg(`Hello! I am the <strong>Toque Saude</strong> health assistant 👋<br>I will guide you with information about <strong>menstrual health</strong>.<div class="time">${t()} ✓✓</div>`, 1800);
+  
+  setTimeout(() => { typing.style.display='none'; }, 2500);
+  
+  // 🌟 Inject the real audio file here! 
+  addRealAudioBubble('menstrual_intro.mp3', 2800);
+  
+  addMsg(`<div class="info-card"><div class="ic-header" style="background:#7B1FA2">🩸 Basic Menstrual Cycle Info</div><div class="ic-body"><ul><li>🔴 Normal cycle: <strong>21–35 days</strong></li><li>📅 Duration: <strong>3–7 days</strong> is normal</li><li>🩺 Alert: extremely heavy bleeding — seek medical care</li><li>💧 Change: every <strong>4–6 hours</strong></li></ul></div></div><div class="time">${t()} ✓✓</div>`, 4500);
+  addMsg(`You felt <strong>1 circular notch</strong> in the top right corner 🟣 — this is the tactile mark for the menstrual card.<br><br>Tap the buttons below to continue.<div class="time">${t()} ✓✓</div>`, 6500);
   setTimeout(() => { qr.style.display='flex'; }, 7000);
 };
-function step2() { qr.style.display='none'; setTimeout(()=>{const d=document.createElement('div');d.className='bubble-wrap in';d.innerHTML=audioBubble();body.insertBefore(d,typing);body.scrollTop=body.scrollHeight;},100); addMsg(`🔊 Áudio reproduzido novamente.<div class="time">${t()} ✓✓</div>`, 1200); setTimeout(()=>{qr.style.display='flex';},1800); }
-function step3() { qr.style.display='none'; const o=document.createElement('div');o.className='bubble-wrap out';o.innerHTML=`<div class="bubble out">📅 Calcular próximo ciclo<div class="time">${t()}</div></div>`;body.appendChild(o); addMsg(`Por favor, me informe a <strong>data do início da sua última menstruação</strong>.<br><br>(Exemplo: 10 de maio)<div class="time">${t()} ✓✓</div>`, 1200); }
-function step4() { qr.style.display='none'; const o=document.createElement('div');o.className='bubble-wrap out';o.innerHTML=`<div class="bubble out">👩‍⚕️ Chamar ACS<div class="time">${t()}</div></div>`;body.appendChild(o); addMsg(`✅ Conectando com a ACS responsável pelo seu bairro...<br><br>📞 Tempo estimado: <strong>~5 minutos</strong><br>UBS Maré · Segunda a Sexta 8:00–17:00<div class="time">${t()} ✓✓</div>`, 1200); }
+
+function step2() { 
+  qr.style.display='none'; 
+  typing.style.display='flex';
+  addRealAudioBubble('menstrual_intro.mp3', 1000); 
+  addMsg(`🔊 Audio message sent again.<div class="time">${t()} ✓✓</div>`, 1500); 
+  setTimeout(()=>{qr.style.display='flex'; typing.style.display='none';}, 2000); 
+}
+function step3() { 
+  qr.style.display='none'; 
+  const o=document.createElement('div');o.className='bubble-wrap out';
+  o.innerHTML=`<div class="bubble out">📅 Calculate next cycle<div class="time">${t()}</div></div>`;
+  body.appendChild(o); 
+  addMsg(`Please tell me the <strong>start date of your last period</strong>.<br><br>(Example: May 10th)<div class="time">${t()} ✓✓</div>`, 1200); 
+}
+function step4() { 
+  qr.style.display='none'; 
+  const o=document.createElement('div');o.className='bubble-wrap out';
+  o.innerHTML=`<div class="bubble out">👩‍⚕️ Call CHW<div class="time">${t()}</div></div>`;
+  body.appendChild(o); 
+  addMsg(`✅ Connecting with the CHW (Community Health Worker) responsible for your neighborhood...<br><br>📞 Estimated time: <strong>~5 minutes</strong><br>Maré Clinic · Mon to Fri 8:00–17:00<div class="time">${t()} ✓✓</div>`, 1200); 
+}
 </script>
 </body>
 </html>
