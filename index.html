@@ -1,0 +1,632 @@
+
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Toque Saude — 健康助手</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --wa-green: #075E54;
+    --wa-green-light: #128C7E;
+    --wa-teal: #25D366;
+    --wa-bubble-in: #FFFFFF;
+    --wa-bubble-out: #DCF8C6;
+    --wa-bg: #ECE5DD;
+    --wa-time: #999;
+  }
+
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f0f0; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+
+  /* ===== HOME SCREEN ===== */
+  #home {
+    width: 100%; max-width: 420px; min-height: 100vh;
+    background: linear-gradient(160deg, #075E54 0%, #128C7E 40%, #1a9e8f 100%);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 40px 24px; gap: 32px;
+  }
+  #home .logo-area { text-align: center; color: white; }
+  #home .logo-icon { font-size: 72px; margin-bottom: 16px; filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3)); }
+  #home h1 { font-size: 32px; font-weight: 800; letter-spacing: -0.5px; }
+  #home .tagline { font-size: 14px; opacity: 0.85; margin-top: 6px; line-height: 1.5; }
+  #home .subtitle { font-size: 13px; opacity: 0.7; margin-top: 4px; }
+  #home .card-grid { width: 100%; display: flex; flex-direction: column; gap: 12px; }
+  .home-card {
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255,255,255,0.25);
+    border-radius: 16px; padding: 16px 20px;
+    display: flex; align-items: center; gap: 16px;
+    cursor: pointer; transition: all 0.2s ease;
+    color: white; text-align: left;
+  }
+  .home-card:hover { background: rgba(255,255,255,0.25); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.2); }
+  .home-card:active { transform: translateY(0); }
+  .home-card .card-emoji { font-size: 36px; flex-shrink: 0; }
+  .home-card .card-info h3 { font-size: 15px; font-weight: 700; }
+  .home-card .card-info p { font-size: 12px; opacity: 0.8; margin-top: 2px; line-height: 1.4; }
+  .home-card .card-dot {
+    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; margin-left: auto;
+    box-shadow: 0 0 8px 2px currentColor;
+  }
+  #home .footer-note { color: rgba(255,255,255,0.6); font-size: 11px; text-align: center; line-height: 1.6; }
+
+  /* ===== CHAT SCREEN ===== */
+  .chat-screen {
+    display: none;
+    width: 100%; max-width: 420px; min-height: 100vh;
+    flex-direction: column; background: var(--wa-bg);
+  }
+  .chat-screen.active { display: flex; }
+
+  .chat-header {
+    padding: 10px 16px; display: flex; align-items: center; gap: 12px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  }
+  .back-btn { background: none; border: none; color: white; font-size: 20px; cursor: pointer; padding: 4px; flex-shrink: 0; }
+  .header-avatar { width: 40px; height: 40px; border-radius: 50%; background: rgba(255,255,255,0.25); display: flex; align-items: center; justify-content: center; font-size: 22px; flex-shrink: 0; }
+  .header-info { flex: 1; }
+  .header-info h2 { font-size: 16px; font-weight: 700; color: white; }
+  .header-info p { font-size: 12px; color: rgba(255,255,255,0.85); }
+  .header-icons { display: flex; gap: 16px; color: white; font-size: 18px; }
+
+  .chat-body {
+    flex: 1; overflow-y: auto; padding: 16px 12px 20px;
+    background: var(--wa-bg);
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23c5b8a8' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+
+  /* Bubbles */
+  .bubble-wrap { display: flex; margin-bottom: 4px; }
+  .bubble-wrap.in { justify-content: flex-start; }
+  .bubble-wrap.out { justify-content: flex-end; }
+
+  .bubble {
+    max-width: 78%; padding: 8px 12px 6px; border-radius: 8px;
+    font-size: 14px; line-height: 1.5; position: relative;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+    animation: popIn 0.25s ease;
+  }
+  @keyframes popIn { from { opacity:0; transform: scale(0.92) translateY(6px); } to { opacity:1; transform: scale(1) translateY(0); } }
+  .bubble.in { background: var(--wa-bubble-in); border-top-left-radius: 0; }
+  .bubble.out { background: var(--wa-bubble-out); border-top-right-radius: 0; }
+  .bubble .time { font-size: 11px; color: var(--wa-time); text-align: right; margin-top: 2px; }
+
+  /* Special bubble types */
+  .bubble.audio-bubble { display: flex; align-items: center; gap: 10px; min-width: 200px; }
+  .audio-play-btn { width: 38px; height: 38px; border-radius: 50%; background: var(--wa-teal); border: none; color: white; font-size: 16px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+  .audio-play-btn:hover { background: var(--wa-green-light); }
+  .audio-wave { flex: 1; height: 24px; display: flex; align-items: center; gap: 2px; }
+  .audio-wave span { display: block; width: 3px; background: #aaa; border-radius: 2px; animation: wave 1.2s ease-in-out infinite; }
+  .audio-wave span:nth-child(1){ height:8px; animation-delay:0s; }
+  .audio-wave span:nth-child(2){ height:16px; animation-delay:0.1s; }
+  .audio-wave span:nth-child(3){ height:22px; animation-delay:0.2s; }
+  .audio-wave span:nth-child(4){ height:12px; animation-delay:0.3s; }
+  .audio-wave span:nth-child(5){ height:18px; animation-delay:0.4s; }
+  .audio-wave span:nth-child(6){ height:10px; animation-delay:0.5s; }
+  .audio-wave span:nth-child(7){ height:20px; animation-delay:0.6s; }
+  .audio-wave span:nth-child(8){ height:14px; animation-delay:0.7s; }
+  @keyframes wave { 0%,100%{ opacity:0.4; transform:scaleY(0.7); } 50%{ opacity:1; transform:scaleY(1); } }
+  .audio-wave.paused span { animation-play-state: paused; opacity: 0.3; }
+  .audio-dur { font-size: 12px; color: var(--wa-time); flex-shrink: 0; }
+
+  .bubble.image-bubble { padding: 4px; }
+  .bubble.image-bubble img { width: 100%; border-radius: 6px; display: block; }
+  .bubble.image-bubble .img-caption { padding: 6px 8px 4px; font-size: 13px; color: #555; }
+  .bubble.image-bubble .time { padding: 0 8px 4px; }
+
+  .bubble.system-bubble { background: rgba(255,255,255,0.85); text-align: center; font-size: 12px; color: #666; border-radius: 8px; padding: 6px 12px; max-width: 85%; margin: 0 auto 8px; }
+
+  /* Info card inside bubble */
+  .info-card { border-radius: 8px; overflow: hidden; border: 1px solid #e0e0e0; }
+  .info-card .ic-header { padding: 10px 12px; font-weight: 700; font-size: 13px; color: white; }
+  .info-card .ic-body { padding: 10px 12px; font-size: 13px; line-height: 1.6; color: #333; background: white; }
+  .info-card .ic-body ul { padding-left: 18px; }
+  .info-card .ic-body li { margin-bottom: 4px; }
+
+  /* Typing indicator */
+  .typing-wrap { display: flex; margin-bottom: 8px; }
+  .typing-indicator { background: var(--wa-bubble-in); border-radius: 8px; border-top-left-radius: 0; padding: 12px 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.15); display: flex; gap: 4px; align-items: center; }
+  .typing-dot { width: 8px; height: 8px; border-radius: 50%; background: #aaa; animation: typingBounce 1.2s ease-in-out infinite; }
+  .typing-dot:nth-child(2){ animation-delay: 0.15s; }
+  .typing-dot:nth-child(3){ animation-delay: 0.3s; }
+  @keyframes typingBounce { 0%,60%,100%{ transform:translateY(0); } 30%{ transform:translateY(-6px); } }
+
+  /* Quick reply buttons */
+  .quick-reply-area { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 12px 4px; }
+  .qr-btn {
+    background: white; border: 1.5px solid var(--wa-green-light); color: var(--wa-green-light);
+    border-radius: 20px; padding: 8px 16px; font-size: 13px; font-weight: 600;
+    cursor: pointer; transition: all 0.2s; white-space: nowrap;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  }
+  .qr-btn:hover { background: var(--wa-green-light); color: white; }
+  .qr-btn.danger { border-color: #e53935; color: #e53935; }
+  .qr-btn.danger:hover { background: #e53935; color: white; }
+  .qr-btn.secondary { border-color: #888; color: #888; }
+  .qr-btn.secondary:hover { background: #888; color: white; }
+
+  /* Chat input area */
+  .chat-input-bar {
+    padding: 8px 12px; background: #f0f0f0;
+    display: flex; align-items: center; gap: 10px;
+    border-top: 1px solid #ddd;
+  }
+  .chat-input { flex:1; background: white; border: none; border-radius: 24px; padding: 10px 16px; font-size: 14px; outline: none; color: #333; }
+  .send-btn { width: 44px; height: 44px; border-radius: 50%; background: var(--wa-teal); border: none; color: white; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+
+  /* Scrollbar */
+  .chat-body::-webkit-scrollbar { width: 4px; }
+  .chat-body::-webkit-scrollbar-track { background: transparent; }
+  .chat-body::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 4px; }
+
+  /* Emergency overlay */
+  #emergency-overlay {
+    display: none; position: fixed; inset: 0; z-index: 999;
+    background: rgba(0,0,0,0.85); justify-content: center; align-items: center;
+    animation: fadeIn 0.3s ease;
+  }
+  @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+  #emergency-overlay.show { display: flex; }
+  .emergency-box {
+    background: white; border-radius: 16px; padding: 28px 24px; max-width: 340px; width: 90%;
+    text-align: center;
+  }
+  .emergency-box .em-icon { font-size: 56px; margin-bottom: 12px; }
+  .emergency-box h2 { font-size: 18px; font-weight: 800; color: #e53935; margin-bottom: 8px; }
+  .emergency-box p { font-size: 13px; color: #555; line-height: 1.6; margin-bottom: 20px; }
+  .em-close-btn { background: #e53935; color: white; border: none; border-radius: 24px; padding: 12px 28px; font-size: 14px; font-weight: 700; cursor: pointer; }
+
+  .date-divider { text-align: center; margin: 12px 0 8px; }
+  .date-divider span { background: rgba(225,200,160,0.7); color: #666; font-size: 11.5px; padding: 4px 12px; border-radius: 12px; }
+
+  /* NFC tap visual hint */
+  .nfc-hint { display: flex; align-items: center; gap: 8px; background: rgba(37,211,102,0.12); border: 1px dashed var(--wa-teal); border-radius: 10px; padding: 8px 12px; margin: 0 12px 12px; font-size: 12px; color: #555; }
+</style>
+</head>
+<body>
+
+<!-- ===== HOME SCREEN ===== -->
+<div id="home">
+  <div class="logo-area">
+    <div class="logo-icon">🌿</div>
+    <h1>Toque Saude</h1>
+    <p class="tagline">触碰即知 · 打通健康信息的最后一厘米</p>
+    <p class="subtitle">NFC无障碍健康信息系统 · Demo展示</p>
+  </div>
+
+  <div class="card-grid">
+    <div class="home-card" onclick="openCard('card1')">
+      <span class="card-emoji">🟣</span>
+      <div class="card-info">
+        <h3>卡片 1 — 月经与卫生管理卡</h3>
+        <p>视障用户 · 语音引导路径 · 1个触觉凹槽</p>
+      </div>
+      <div class="card-dot" style="color:#9C27B0"></div>
+    </div>
+    <div class="home-card" onclick="openCard('card2')">
+      <span class="card-emoji">🩷</span>
+      <div class="card-info">
+        <h3>卡片 2 — 乳腺居家自查卡</h3>
+        <p>视障用户 · 步骤语音引导 · 2个触觉凹槽</p>
+      </div>
+      <div class="card-dot" style="color:#E91E8C"></div>
+    </div>
+    <div class="home-card" onclick="openCard('card3')">
+      <span class="card-emoji">🟢</span>
+      <div class="card-info">
+        <h3>卡片 3 — 孕期健康与产检卡</h3>
+        <p>听障用户 · 手语视频+大字图文 · 3个触觉凹槽</p>
+      </div>
+      <div class="card-dot" style="color:#4CAF50"></div>
+    </div>
+    <div class="home-card" onclick="openCard('card4')">
+      <span class="card-emoji">🔵</span>
+      <div class="card-info">
+        <h3>卡片 4 — 慢性病与用药安全卡</h3>
+        <p>认知障碍用户 · 极简步骤引导 · 4个触觉凹槽</p>
+      </div>
+      <div class="card-dot" style="color:#2196F3"></div>
+    </div>
+    <div class="home-card" onclick="openCard('card5')">
+      <span class="card-emoji">🌸</span>
+      <div class="card-info">
+        <h3>卡片 5 — 防暴与紧急避险卡</h3>
+        <p>隐蔽设计 · 磨砂纹理暗号 · 静默求助通道</p>
+      </div>
+      <div class="card-dot" style="color:#9E9E9E"></div>
+    </div>
+  </div>
+  <p class="footer-note">📱 模拟NFC碰触效果 · 点击任意卡片即可体验<br>实际场景中：手机贴近NFC卡片 → 自动弹出此界面</p>
+</div>
+
+<!-- ===== CARD 1: 月经与卫生管理卡 ===== -->
+<div id="card1" class="chat-screen">
+  <div class="chat-header" style="background: linear-gradient(135deg, #7B1FA2, #9C27B0);">
+    <button class="back-btn" onclick="goHome()">←</button>
+    <div class="header-avatar">🌿</div>
+    <div class="header-info"><h2>Toque Saude 健康助手</h2><p>🟣 月经与卫生管理卡 · 视障语音版</p></div>
+  </div>
+  <div class="chat-body" id="body1">
+    <div class="date-divider"><span>今天</span></div>
+    <div class="bubble-wrap out"><div class="bubble out">GET_MENSTRUAL_FLOW<div class="time">✓✓ 刚刚</div></div></div>
+    <div id="typing1" class="typing-wrap"><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>
+  </div>
+  <div class="quick-reply-area" id="qr1" style="display:none">
+    <button class="qr-btn" onclick="card1Step(2)">🔊 再次播放语音</button>
+    <button class="qr-btn" onclick="card1Step(3)">📅 推算经期周期</button>
+    <button class="qr-btn secondary" onclick="card1Step(4)">👩‍⚕️ 呼叫社区健康员</button>
+  </div>
+  <div class="chat-input-bar"><input class="chat-input" placeholder="系统自动响应，无需输入..." readonly><button class="send-btn">🎤</button></div>
+</div>
+
+<!-- ===== CARD 2: 乳腺居家自查卡 ===== -->
+<div id="card2" class="chat-screen">
+  <div class="chat-header" style="background: linear-gradient(135deg, #AD1457, #E91E8C);">
+    <button class="back-btn" onclick="goHome()">←</button>
+    <div class="header-avatar">🌿</div>
+    <div class="header-info"><h2>Toque Saude 健康助手</h2><p>🩷 乳腺居家自查卡 · 视障步骤引导</p></div>
+  </div>
+  <div class="chat-body" id="body2">
+    <div class="date-divider"><span>今天</span></div>
+    <div class="bubble-wrap out"><div class="bubble out">GET_BSE_FLOW<div class="time">✓✓ 刚刚</div></div></div>
+    <div id="typing2" class="typing-wrap"><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>
+  </div>
+  <div class="quick-reply-area" id="qr2" style="display:none">
+    <button class="qr-btn" onclick="card2Step(2)">✅ 完成，下一步</button>
+    <button class="qr-btn secondary" onclick="card2Step(99)">🔊 重新播放语音</button>
+  </div>
+  <div class="chat-input-bar"><input class="chat-input" placeholder="系统自动响应，无需输入..." readonly><button class="send-btn">🎤</button></div>
+</div>
+
+<!-- ===== CARD 3: 孕期健康与产检卡 ===== -->
+<div id="card3" class="chat-screen">
+  <div class="chat-header" style="background: linear-gradient(135deg, #1B5E20, #388E3C);">
+    <button class="back-btn" onclick="goHome()">←</button>
+    <div class="header-avatar">🌿</div>
+    <div class="header-info"><h2>Toque Saude 健康助手</h2><p>🤰 孕期健康产检卡 · 听障手语版</p></div>
+  </div>
+  <div class="chat-body" id="body3">
+    <div class="date-divider"><span>今天</span></div>
+    <div class="bubble-wrap out"><div class="bubble out">GET_PREGNANCY_FLOW<div class="time">✓✓ 刚刚</div></div></div>
+    <div id="typing3" class="typing-wrap"><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>
+  </div>
+  <div class="quick-reply-area" id="qr3" style="display:none">
+    <button class="qr-btn" onclick="card3Step(2)">🏥 去最近的UBS诊所</button>
+    <button class="qr-btn" onclick="card3Step(3)">📋 查看全部产检清单</button>
+    <button class="qr-btn secondary" onclick="card3Step(4)">👩‍⚕️ 呼叫社区健康员</button>
+  </div>
+  <div class="chat-input-bar"><input class="chat-input" placeholder="系统自动响应，无需输入..." readonly><button class="send-btn">🎤</button></div>
+</div>
+
+<!-- ===== CARD 4: 慢性病与用药安全卡 ===== -->
+<div id="card4" class="chat-screen">
+  <div class="chat-header" style="background: linear-gradient(135deg, #0D47A1, #1976D2);">
+    <button class="back-btn" onclick="goHome()">←</button>
+    <div class="header-avatar">🌿</div>
+    <div class="header-info"><h2>Toque Saude 健康助手</h2><p>💊 慢性病用药卡 · 认知障碍极简版</p></div>
+  </div>
+  <div class="chat-body" id="body4">
+    <div class="date-divider"><span>今天</span></div>
+    <div class="bubble-wrap out"><div class="bubble out">GET_MED_FLOW<div class="time">✓✓ 刚刚</div></div></div>
+    <div id="typing4" class="typing-wrap"><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>
+  </div>
+  <div class="quick-reply-area" id="qr4" style="display:none">
+    <button class="qr-btn" onclick="card4Step(2)">✅ 我记住了！</button>
+    <button class="qr-btn secondary" onclick="card4Step(3)">⏰ 开启每日提醒</button>
+  </div>
+  <div class="chat-input-bar"><input class="chat-input" placeholder="系统自动响应，无需输入..." readonly><button class="send-btn">🎤</button></div>
+</div>
+
+<!-- ===== CARD 5: 防暴与紧急避险卡 ===== -->
+<div id="card5" class="chat-screen">
+  <div class="chat-header" style="background: linear-gradient(135deg, #37474F, #546E7A);">
+    <button class="back-btn" onclick="goHome()">←</button>
+    <div class="header-avatar">🌸</div>
+    <div class="header-info"><h2>花卉生活助手</h2><p>🌸 今日花卉推荐 · 园艺小贴士</p></div>
+  </div>
+  <div class="chat-body" id="body5">
+    <div class="date-divider"><span>今天</span></div>
+    <div class="bubble-wrap out"><div class="bubble out">GET_FLOWER_TODAY<div class="time">✓✓ 刚刚</div></div></div>
+    <div id="typing5" class="typing-wrap"><div class="typing-indicator"><div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div></div></div>
+  </div>
+  <div class="quick-reply-area" id="qr5" style="display:none">
+    <button class="qr-btn danger" onclick="card5Step(2)">🚨 我需要立即帮助</button>
+    <button class="qr-btn secondary" onclick="card5Step(3)">📍 附近安全地点</button>
+  </div>
+  <div class="chat-input-bar"><input class="chat-input" placeholder="系统自动响应，无需输入..." readonly><button class="send-btn">🌸</button></div>
+</div>
+
+<!-- Emergency Overlay -->
+<div id="emergency-overlay">
+  <div class="emergency-box">
+    <div class="em-icon">🚨</div>
+    <h2>系统正在静默通知</h2>
+    <p>已向最近的 <strong>DEAM 妇女防暴警察局</strong> 及庇护所发送位置信息。<br><br>社工正在前往。<br><br>此消息将在 <strong>60秒后自动删除</strong>，请保持镇定。</p>
+    <button class="em-close-btn" onclick="closeEmergency()">我已收到，关闭并删除</button>
+  </div>
+</div>
+
+<script>
+const $ = (id) => document.getElementById(id);
+
+function goHome() {
+  document.querySelectorAll('.chat-screen').forEach(s => s.classList.remove('active'));
+  $('home').style.display = 'flex';
+}
+
+function openCard(cardId) {
+  $('home').style.display = 'none';
+  $(cardId).classList.add('active');
+  // Reset & run
+  const runners = { card1: runCard1, card2: runCard2, card3: runCard3, card4: runCard4, card5: runCard5 };
+  const bodyEl = $(`body${cardId.replace('card','')}`);
+  // Clear old messages except first two
+  const allBubbles = bodyEl.querySelectorAll('.bubble-wrap:not(:first-of-type), .bubble-wrap.system, .nfc-hint');
+  allBubbles.forEach(el => { if(el.id === undefined || !el.id.startsWith('typing')) el.remove(); });
+  // Show typing
+  const ti = bodyEl.querySelector('[id^="typing"]');
+  if(ti){ ti.style.display='flex'; }
+  // Hide QR buttons
+  const qrNum = cardId.replace('card','');
+  $(`qr${qrNum}`).style.display = 'none';
+  setTimeout(() => runners[cardId](), 200);
+}
+
+function addBubble(bodyId, type, html, delay=0) {
+  return new Promise(resolve => {
+    setTimeout(() => {
+      const body = $(bodyId);
+      const typing = body.querySelector('[id^="typing"]');
+      const div = document.createElement('div');
+      div.className = `bubble-wrap in`;
+      div.innerHTML = `<div class="bubble in ${type}">${html}</div>`;
+      if(typing) body.insertBefore(div, typing);
+      else body.appendChild(div);
+      body.scrollTop = body.scrollHeight;
+      resolve();
+    }, delay);
+  });
+}
+
+function showButtons(qrId, delay=0) {
+  setTimeout(() => { $(qrId).style.display='flex'; }, delay);
+}
+
+function hideTyping(bodyId) {
+  const body = $(bodyId);
+  const ti = body.querySelector('[id^="typing"]');
+  if(ti) ti.style.display='none';
+}
+
+function audioBubble(isPlaying) {
+  const waveClass = isPlaying ? 'audio-wave' : 'audio-wave paused';
+  return `<div class="bubble in audio-bubble">
+    <button class="audio-play-btn" onclick="toggleAudio(this)">▶</button>
+    <div class="${waveClass}">
+      <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+    </div>
+    <span class="audio-dur">0:45</span>
+    <div class="time" style="position:absolute;bottom:4px;right:10px;">✓✓</div>
+  </div>`;
+}
+
+function toggleAudio(btn) {
+  const wave = btn.nextElementSibling;
+  if(wave.classList.contains('paused')) { wave.classList.remove('paused'); btn.textContent='⏸'; }
+  else { wave.classList.add('paused'); btn.textContent='▶'; }
+}
+
+const getTime = () => { const n=new Date(); return `${n.getHours()}:${String(n.getMinutes()).padStart(2,'0')}`; };
+
+// ========== CARD 1: 月经与卫生管理卡 ==========
+function runCard1() {
+  const b = 'body1';
+  addBubble(b, '', `<div class="bubble-wrap system"><div class="bubble system-bubble">🔔 NFC触发成功 · GET_MENSTRUAL_FLOW · <span style="color:var(--wa-teal)">已连接视障语音路径</span></div></div>`, 800);
+  addBubble(b, '', `您好，我是 <strong>Toque Saude 健康助手</strong> 👋<br>我将为您提供 <strong>月经卫生管理</strong> 的无障碍语音指南。<div class="time">${getTime()} ✓✓</div>`, 1800);
+  setTimeout(()=>{ hideTyping(b); }, 2500);
+  addBubble(b, 'audio-bubble', audioBubble(true), 2800);
+  addBubble(b, '', `<div class="info-card">
+    <div class="ic-header" style="background:#7B1FA2">🩸 月经周期基础知识</div>
+    <div class="ic-body">
+      <ul>
+        <li>🔴 正常月经周期：<strong>21–35天</strong></li>
+        <li>📅 经期持续：<strong>3–7天</strong>为正常范围</li>
+        <li>🩺 异常信号：经血过多（1小时浸透1片卫生巾）请就医</li>
+        <li>💧 更换频率：每 <strong>4–6小时</strong> 更换一次卫生用品</li>
+      </ul>
+    </div>
+  </div><div class="time">${getTime()} ✓✓</div>`, 4500);
+  addBubble(b, '', `您摸到卡片右上角有 <strong>1个圆形凹槽</strong> — 这是月经健康卡的触觉标识 🟣<br><br>如需了解更多，请点击下方按钮。<div class="time">${getTime()} ✓✓</div>`, 6500);
+  showButtons('qr1', 7000);
+}
+
+function card1Step(step) {
+  const b = 'body1';
+  if(step === 2) {
+    $('qr1').style.display='none';
+    addBubble(b, 'audio-bubble', audioBubble(true), 100);
+    addBubble(b, '', `语音已重新播放 🔊<div class="time">${getTime()} ✓✓</div>`, 1200);
+    showButtons('qr1', 1800);
+  } else if(step === 3) {
+    $('qr1').style.display='none';
+    addBubble(b, 'out', `📅 推算我的经期周期<div class="time">${getTime()}</div>`, 0);
+    addBubble(b, '', `请告诉我您 <strong>上次月经开始的日期</strong>，我来帮您推算下次经期时间。<br><br>（示例回复：5月10日）<div class="time">${getTime()} ✓✓</div>`, 1200);
+  } else if(step === 4) {
+    $('qr1').style.display='none';
+    addBubble(b, 'out', `👩‍⚕️ 呼叫社区健康员<div class="time">${getTime()}</div>`, 0);
+    addBubble(b, '', `✅ 正在为您连接负责本街区的 <strong>社区健康工作者 Ana</strong>...<br><br>📞 预计等待时间：<strong>约5分钟</strong><br>地址：UBS Maré 社区卫生站，周一至周五 8:00–17:00<div class="time">${getTime()} ✓✓</div>`, 1200);
+  }
+  document.getElementById('body1').scrollTop = 99999;
+}
+
+// ========== CARD 2: 乳腺居家自查卡 ==========
+let card2StepNum = 1;
+const bseSteps = [
+  { icon:'🪞', title:'第一步：观察外形', text:'站在镜子前，双臂自然下垂，仔细观察两侧乳房的 <strong>外形、大小、皮肤颜色</strong> 是否对称。注意是否有凹陷、皱褶或红肿。' },
+  { icon:'🙌', title:'第二步：举臂检查', text:'双手举过头顶，再次观察乳房形状变化。检查腋下是否有肿块或不适感。' },
+  { icon:'🖐️', title:'第三步：螺旋触检', text:'用右手检查左侧乳房：三根手指并拢，以 <strong>螺旋形路径</strong> 从乳头向外圈轻柔按压，感受是否有硬块或异常突起。卡片上的凸起线条正是这个路径的触觉版本！' },
+  { icon:'🔄', title:'第四步：换手检查', text:'用左手检查右侧乳房，重复相同的螺旋触检动作。' },
+  { icon:'🛁', title:'第五步：躺下检查', text:'平躺，在被检查侧肩膀下垫一个薄枕，用指腹再次按压乳房各区域。淋浴时皮肤湿润，检查效果更好！' },
+];
+
+function runCard2() {
+  card2StepNum = 1;
+  const b = 'body2';
+  addBubble(b, '', `<div class="bubble-wrap system"><div class="bubble system-bubble">🔔 NFC触发 · GET_BSE_FLOW · <span style="color:#E91E8C">已连接乳腺自查步骤引导</span></div></div>`, 800);
+  addBubble(b, '', `您好 👋 我是 <strong>Toque Saude</strong> 健康助手。<br>粉色卡片右上角有 <strong>2个圆形凹槽</strong> — 这是您的 <strong>乳腺自查卡</strong> 🩷<br><br>我将一步一步引导您完成居家乳腺自查，每次只需约 <strong>5分钟</strong>。<div class="time">${getTime()} ✓✓</div>`, 2000);
+  setTimeout(()=>{ hideTyping(b); }, 2800);
+  addBubble(b, 'audio-bubble', audioBubble(true), 3000);
+  addBubble(b, '', `<div class="info-card">
+    <div class="ic-header" style="background:#AD1457">🩷 ${bseSteps[0].icon} ${bseSteps[0].title}</div>
+    <div class="ic-body">${bseSteps[0].text}<br><br><em style="color:#888">👆 完成后点击「下一步」继续</em></div>
+  </div><div class="time">${getTime()} ✓✓</div>`, 4500);
+  showButtons('qr2', 5200);
+}
+
+function card2Step(step) {
+  const b = 'body2';
+  $('qr2').style.display='none';
+  if(step === 99) { runCard2(); return; }
+
+  card2StepNum++;
+  if(card2StepNum <= bseSteps.length) {
+    const s = bseSteps[card2StepNum - 1];
+    addBubble(b, 'out', `✅ 完成，下一步<div class="time">${getTime()}</div>`, 0);
+    addBubble(b, 'audio-bubble', audioBubble(true), 800);
+    addBubble(b, '', `<div class="info-card">
+      <div class="ic-header" style="background:#AD1457">🩷 ${s.icon} ${s.title}（${card2StepNum}/5）</div>
+      <div class="ic-body">${s.text}<br><br><em style="color:#888">👆 完成后点击「下一步」继续</em></div>
+    </div><div class="time">${getTime()} ✓✓</div>`, 1800);
+    showButtons('qr2', 2500);
+  } else {
+    addBubble(b, 'out', `✅ 完成，下一步<div class="time">${getTime()}</div>`, 0);
+    addBubble(b, '', `🎉 <strong>太棒了！您已完成全部5步乳腺自查！</strong><br><br>建议每月月经结束后第 <strong>7–10天</strong> 重复一次。<br><br>⚠️ 如果摸到任何 <strong>硬块、凹陷或分泌物</strong>，请尽快就医，不要恐慌。<div class="time">${getTime()} ✓✓</div>`, 1200);
+    $('qr2').innerHTML = `<button class="qr-btn" onclick="card2Step(99)">🔄 重新开始自查</button><button class="qr-btn secondary" onclick="alert('正在连接社区健康员...')">👩‍⚕️ 我有疑虑，呼叫健康员</button>`;
+    showButtons('qr2', 2000);
+  }
+  $(b).scrollTop = 99999;
+}
+
+// ========== CARD 3: 孕期健康与产检卡 ==========
+function runCard3() {
+  const b = 'body3';
+  addBubble(b, '', `<div class="bubble-wrap system"><div class="bubble system-bubble">🔔 NFC触发 · GET_PREGNANCY_FLOW · <span style="color:#4CAF50">已连接听障图文+视频路径</span></div></div>`, 800);
+  addBubble(b, '', `<span style="font-size:24px">🤰</span> <strong>Toque Saude 孕期健康助手</strong><br><br>绿色卡片右上角有 <strong>3个圆形凹槽</strong> — 这是您的孕期产检卡。<br><br>以下内容提供 <strong>大字图文版</strong> 和 <strong>Libras手语视频版</strong>。<div class="time">${getTime()} ✓✓</div>`, 2000);
+  setTimeout(()=>{ hideTyping(b); }, 2800);
+  // Libras video mock
+  addBubble(b, 'image-bubble', `
+    <div style="background:linear-gradient(135deg,#1B5E20,#388E3C);padding:32px;text-align:center;border-radius:6px 6px 0 0;">
+      <div style="font-size:48px">🤟</div>
+      <div style="color:white;font-size:13px;margin-top:8px;font-weight:700">Libras 手语视频</div>
+      <div style="color:rgba(255,255,255,0.8);font-size:11px;margin-top:4px">巴西手语 · 孕期产检全程介绍</div>
+      <div style="background:rgba(0,0,0,0.3);color:white;border-radius:20px;padding:6px 16px;margin-top:12px;display:inline-block;font-size:12px">▶ 点击播放 · 时长 3:24</div>
+    </div>
+    <div class="img-caption">🤟 Libras 孕期产检完整手语视频（含高亮字幕）</div>
+    <div class="time">${getTime()} ✓✓</div>
+  `, 3500);
+  addBubble(b, '', `<div class="info-card">
+    <div class="ic-header" style="background:#2E7D32;font-size:16px;">📅 孕期产检关键时间节点</div>
+    <div class="ic-body" style="font-size:14px;line-height:2;">
+      ✅ <strong>孕6–8周</strong>：确认怀孕 + 建档<br>
+      ✅ <strong>孕11–14周</strong>：NT超声筛查<br>
+      ✅ <strong>孕16–20周</strong>：中期排畸超声<br>
+      ✅ <strong>孕24–28周</strong>：糖耐量检测（GDM）<br>
+      ✅ <strong>孕36周起</strong>：每周产检一次
+    </div>
+  </div><div class="time">${getTime()} ✓✓</div>`, 5500);
+  addBubble(b, '', `<span style="font-size:20px">📍</span> 最近的无障碍UBS诊所：<br><strong>UBS Saúde da Mulher</strong><br>地址：Rua das Flores 123<br>开放时间：周一～周五 <strong>7:00–19:00</strong><br>无障碍设施：✅ 轮椅坡道 ✅ 手语翻译 ✅ 免预约<div class="time">${getTime()} ✓✓</div>`, 7500);
+  showButtons('qr3', 8200);
+}
+
+function card3Step(step) {
+  const b = 'body3'; $('qr3').style.display='none';
+  if(step===2){ addBubble(b,'out',`🏥 去最近的UBS诊所<div class="time">${getTime()}</div>`,0); addBubble(b,'',`📍 为您规划路线：<br><strong>UBS Saúde da Mulher</strong><br>🚶 步行约12分钟<br>🚌 公交3路，乘坐2站<br><br>🔊 <em>语音路线导航已发送至您的手机</em><div class="time">${getTime()} ✓✓</div>`,1200); }
+  else if(step===3){ addBubble(b,'out',`📋 查看全部产检清单<div class="time">${getTime()}</div>`,0); addBubble(b,'',`<div class="info-card"><div class="ic-header" style="background:#2E7D32">📋 SUS免费产检完整项目</div><div class="ic-body"><ul><li>血常规 + 血型鉴定</li><li>尿液常规分析</li><li>HIV / 梅毒 / 乙肝筛查</li><li>弓形虫 / 风疹抗体检测</li><li>全程超声检查（共3次）</li><li>血压监测（每次产检必测）</li></ul><br><em>以上项目在SUS体系内全部 <strong>免费</strong>！</em></div></div><div class="time">${getTime()} ✓✓</div>`,1200); }
+  else if(step===4){ addBubble(b,'out',`👩‍⚕️ 呼叫社区健康员<div class="time">${getTime()}</div>`,0); addBubble(b,'',`✅ 正在联系您所在街区的 <strong>ACS社区健康工作者</strong>...<br>她将在入户走访时为您解答产检相关问题。<div class="time">${getTime()} ✓✓</div>`,1200); }
+  $(b).scrollTop = 99999;
+}
+
+// ========== CARD 4: 慢性病与用药安全卡 ==========
+function runCard4() {
+  const b = 'body4';
+  addBubble(b,'',`<div class="bubble-wrap system"><div class="bubble system-bubble">🔔 NFC触发 · GET_MED_FLOW · <span style="color:#2196F3">已连接认知障碍极简路径</span></div></div>`,800);
+  setTimeout(()=>{ hideTyping(b); }, 2000);
+  addBubble(b,'',`<div style="text-align:center;padding:16px 0;">
+    <div style="font-size:80px;">💊</div>
+    <div style="font-size:22px;font-weight:800;color:#1976D2;margin-top:8px;">每天早上</div>
+    <div style="font-size:48px;font-weight:900;color:#0D47A1;">吃 1 颗</div>
+    <div style="font-size:16px;color:#555;margin-top:4px;">⏰ 今天早上8点</div>
+  </div><div class="time">${getTime()} ✓✓</div>`, 2200);
+  addBubble(b,'',`<div style="text-align:center;padding:8px;">
+    <div style="font-size:40px">🌅</div>
+    <div style="font-size:15px;color:#333;font-weight:600;margin-top:6px;">早餐后服用，不要空腹</div>
+  </div><div class="time">${getTime()} ✓✓</div>`, 4000);
+  showButtons('qr4', 4800);
+}
+
+function card4Step(step) {
+  const b = 'body4'; $('qr4').style.display='none';
+  if(step===2){
+    addBubble(b,'out',`✅ 我记住了！<div class="time">${getTime()}</div>`,0);
+    addBubble(b,'',`<div style="text-align:center;padding:12px;"><div style="font-size:56px">🎉</div><div style="font-size:16px;font-weight:700;color:#1976D2;margin-top:8px;">太棒了！</div><div style="font-size:13px;color:#555;margin-top:4px;">记得明天早上继续哦 ☀️</div></div><div class="time">${getTime()} ✓✓</div>`,800);
+  } else if(step===3){
+    addBubble(b,'out',`⏰ 开启每日提醒<div class="time">${getTime()}</div>`,0);
+    addBubble(b,'',`✅ 每日提醒已设置！<br><br>⏰ 我将在每天 <strong>早上 8:00</strong> 发送一条提醒消息给您。<br><br>💊 明天见！<div class="time">${getTime()} ✓✓</div>`,800);
+  }
+  $(b).scrollTop = 99999;
+}
+
+// ========== CARD 5: 防暴与紧急避险卡 ==========
+function runCard5() {
+  const b = 'body5';
+  // Decoy interface first
+  addBubble(b,'',`<div class="bubble-wrap system"><div class="bubble system-bubble" style="background:rgba(255,255,255,0.9)">🌸 花卉助手 · 今日推荐</div></div>`,800);
+  addBubble(b,'image-bubble',`
+    <div style="background:linear-gradient(135deg,#78909C,#90A4AE);padding:28px;text-align:center;border-radius:6px 6px 0 0;">
+      <div style="font-size:56px">🌸</div>
+      <div style="color:white;font-size:14px;margin-top:6px">今日花卉：粉色雏菊</div>
+      <div style="color:rgba(255,255,255,0.75);font-size:11px">花语：坚强与希望</div>
+    </div>
+    <div class="img-caption" style="color:#666;">看起来是普通的花卉推荐...</div>
+    <div class="time">${getTime()} ✓✓</div>
+  `, 2000);
+  setTimeout(()=>{ hideTyping(b); }, 2800);
+  // Hidden message embedded
+  addBubble(b,'',`今日天气：<strong>多云转晴</strong> 🌤️<br>气温：23–27°C<br><br><span style="background:#fff3cd;padding:2px 6px;border-radius:4px;font-size:12px;">🌸 花园小贴士：今天适合浇水</span><br><br><em style="font-size:11px;color:#aaa;">（界面外观：普通生活类App · 保护您的隐私）</em><div class="time">${getTime()} ✓✓</div>`, 3500);
+  showButtons('qr5', 4500);
+}
+
+function card5Step(step) {
+  const b = 'body5'; $('qr5').style.display='none';
+  if(step===2){
+    addBubble(b,'',`<div style="background:#fff3e0;border-left:4px solid #FF5722;padding:12px;border-radius:6px;">
+      <div style="font-weight:800;color:#BF360C;font-size:14px;">🚨 系统已静默处理</div>
+      <div style="font-size:13px;color:#555;margin-top:6px;line-height:1.7;">
+        📍 位置信息已发送至 <strong>DEAM 妇女防暴警察局</strong><br>
+        🏠 最近庇护所：距您 <strong>1.2公里</strong><br>
+        📞 24小时热线：<strong>180</strong>（全国免费）<br>
+        👩‍💼 社工 Lucia 正在前往
+      </div>
+    </div><div class="time">${getTime()} ✓✓</div>`, 500);
+    addBubble(b,'',`⏱️ 此消息将在 <strong>60秒后自动删除</strong>。<br>请保持镇定，帮助已在路上。<div class="time">${getTime()} ✓✓</div>`, 2000);
+    setTimeout(()=>{ $('emergency-overlay').classList.add('show'); }, 3000);
+  } else if(step===3){
+    addBubble(b,'out',`📍 附近安全地点<div class="time">${getTime()}</div>`,0);
+    addBubble(b,'',`📍 <strong>附近安全地点</strong>（仅您可见）：<br><br>🏠 庇护所A：Rua Segura 45 · <strong>1.2km</strong><br>⛪ 教堂庇护点：Igreja São José · <strong>0.8km</strong><br>🏥 UBS急救：医院急诊 · <strong>2.1km</strong><br><br><em style="font-size:11px;color:#aaa">此对话记录阅后60秒自动删除</em><div class="time">${getTime()} ✓✓</div>`,1000);
+  }
+  $(b).scrollTop = 99999;
+}
+
+function closeEmergency() {
+  $('emergency-overlay').classList.remove('show');
+  const b = 'body5';
+  addBubble(b,'',`<div style="text-align:center;padding:8px;color:#888;font-size:12px;">🔒 聊天记录已安全删除<br><em>界面已恢复普通花卉外观</em></div><div class="time">${getTime()} ✓✓</div>`,200);
+  $('body5').scrollTop = 99999;
+}
+</script>
+</body>
+</html>
