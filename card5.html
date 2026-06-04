@@ -15,7 +15,7 @@
 :root {
   --wa-teal: #25D366;
 
-  /* Card 5 gray theme */
+  /* Gray theme for Card 5 */
   --wa-theme: #616161;
   --wa-theme-dark: #424242;
   --wa-theme-light: #9E9E9E;
@@ -132,6 +132,25 @@ body {
     opacity: 1;
     transform: scale(1) translateY(0);
   }
+}
+
+@keyframes retractOut {
+  from {
+    opacity: 1;
+    transform: scale(1);
+    max-height: 500px;
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.92);
+    max-height: 0;
+    margin-bottom: 0;
+  }
+}
+
+.retracting {
+  animation: retractOut 0.35s ease forwards;
+  overflow: hidden;
 }
 
 .date-divider {
@@ -442,6 +461,7 @@ const qr = document.getElementById('qrArea');
 let audioCount = 0;
 let selfDestructTimer = null;
 let countdownValue = 15;
+let currentAlertBubble = null;
 
 function getTime() {
   const n = new Date();
@@ -456,7 +476,7 @@ function addMsg(html, delay) {
       d.innerHTML = `<div class="bubble in">${html}</div>`;
       body.insertBefore(d, typing);
       body.scrollTop = body.scrollHeight;
-      resolve();
+      resolve(d);
     }, delay);
   });
 }
@@ -467,6 +487,7 @@ function addOutMsg(html) {
   d.innerHTML = `<div class="bubble out">${html}<div class="time">${getTime()}</div></div>`;
   body.appendChild(d);
   body.scrollTop = body.scrollHeight;
+  return d;
 }
 
 function addRealAudioBubble(audioFileName, delay) {
@@ -591,6 +612,7 @@ function wateringTips() {
     1200
   ).then(() => {
     typing.style.display = 'none';
+    qr.style.display = 'flex';
   });
 }
 
@@ -605,16 +627,20 @@ function requestRoses() {
     `<div class="safe-panel">
       <strong>Silent request sent.</strong><br>
       Your trusted contact has been notified with your current help request.<br><br>
-      This screen will return to normal gardening mode automatically.
+      This alert message will be withdrawn automatically.
       <br>
       <span class="countdown">
-        Auto-hide in <span id="countdown">15</span>s
+        Withdraw in <span id="countdown">15</span>s
       </span>
     </div>
     <div class="time">${getTime()} ✓✓</div>`,
     1200
-  ).then(() => {
+  ).then((alertBubbleElement) => {
     typing.style.display = 'none';
+
+    // 关键修复：记录这条告警消息本身，15秒后删除它
+    currentAlertBubble = alertBubbleElement;
+
     startSelfDestruct();
   });
 }
@@ -636,25 +662,27 @@ function startSelfDestruct() {
 
     if (countdownValue <= 0) {
       clearInterval(selfDestructTimer);
-      camouflageReset();
+      withdrawAlertMessage();
     }
   }, 1000);
 }
 
-function camouflageReset() {
-  const d = document.createElement('div');
-  d.className = 'bubble-wrap in';
-  d.innerHTML = `
-    <div class="bubble in">
-      🌿 Flower care mode restored.<br>
-      Remember to water your plants gently and keep them in soft light.
-      <div class="time">${getTime()} ✓✓</div>
-    </div>
-  `;
-  body.appendChild(d);
+function withdrawAlertMessage() {
+  if (currentAlertBubble && currentAlertBubble.parentNode) {
+    currentAlertBubble.classList.add('retracting');
 
-  qr.style.display = 'flex';
-  body.scrollTop = body.scrollHeight;
+    setTimeout(() => {
+      if (currentAlertBubble && currentAlertBubble.parentNode) {
+        currentAlertBubble.parentNode.removeChild(currentAlertBubble);
+      }
+
+      currentAlertBubble = null;
+      qr.style.display = 'flex';
+      body.scrollTop = body.scrollHeight;
+    }, 350);
+  } else {
+    qr.style.display = 'flex';
+  }
 }
 </script>
 
